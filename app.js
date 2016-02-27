@@ -2,8 +2,8 @@ var http = require('http');
 
 var apiKey = "1a2pNH4Ed5Yt15zsqR28Q2MUXJt4gG7B";
 
-function recipeSearch(recipeName){
-    recipeName = recipeName.replace(/\s/g, '%20');
+function recipeSelect(intent, session, callback){
+	var recipeName = intent.slots.Recipe.value.replace(/\s/g, '%20');
 
     var host = "api.bigoven.com"
     var path = "/recipes?pg=1&rpp=25&title_kw="
@@ -23,6 +23,8 @@ function recipeSearch(recipeName){
         var output = "";
         var recipesObject = {};
         var recipesArray = [];
+        var topFiveRecipes = [];
+
         res.on("data", function (chunk) {
             output += chunk
         })
@@ -30,12 +32,41 @@ function recipeSearch(recipeName){
         res.on("end", function () {
             recipesObject = JSON.parse(output);
             recipesArray = recipesObject.Results.reverse();
-            console.log(recipesArray);
+
+            var speechOutput = "Select a recipe. ";
+            var repromptText = "Select a recipe. ";
+
+            for(var x = 0; x < 5 ; x++){
+                speechOutput = speechOutput + (x+1).toString() + " - " + recipesArray[x].Title + ", ";
+                speechOutput = speechOutput + recipesArray[x].Title + ", ";
+
+                repromptText = repromptText + (x+1).toString() + " - " + recipesArray[x].Title + ", ";
+                repromptText = repromptText + recipesArray[x].Title + ", ";
+                topFiveRecipes.push(recipesArray[x]);
+            }
+
+            console.log(topFiveRecipes);
+
+            console.log(speechOutput);
+
+            var sessionAttributes = {
+                    "speechOutput": repromptText,
+                    "repromptText": repromptText
+                    // "currentQuestionIndex": currentQuestionIndex
+                };
+
+            // callback(sessionAttributes, buildSpeechletResponse("card", speechOutput, repromptText, false));
         })
     }).end();
 }
 
-recipeSearch('chicken breast');
+recipeSelect({
+	slots: {
+		Recipe: {
+			value: "chicken breast"
+		}
+	}
+});
 
 
   // Set up the request

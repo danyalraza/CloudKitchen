@@ -13,9 +13,41 @@
  * supports 1 player at a time, and does not support games across sessions.
  */
 
+
+
 'use strict';
 
 var http = require('http');
+// var nodemailer = require('nodemailer');
+
+// //emailer
+// function sendEmail(emailText, emailHTML, callback){
+
+//   var transporter = nodemailer.createTransport({
+//     service: 'Gmail',
+//       auth: {
+//         user: 'spartahackechoramsay@gmail.com',
+//       pass: 'spartahack2016'
+//       }
+//   });
+
+//   var mailOptions = {
+//     from: 'spartahackechoramsay@gmail.com', 
+//     to: 'chen.bill96@gmail.com', 
+//     subject: 'Purchase Reminder', 
+//     text: emailText, 
+//     html: emailHTML 
+//   };
+
+//   transporter.sendMail(mailOptions, function(err, info){
+//     if(err){
+//       console.log("Error sending email: " + err);
+//     }
+//     console.log('Message sent: ' + info.response);
+//     callback("Sucessfully sent message");
+//   });
+
+// };
 
 var fireBaseObject = {
     description:{
@@ -92,6 +124,10 @@ function onIntent(intentRequest, session, callback) {
         recipeSearch(intent, session, callback);
     } else if ("RecipeSelectionIntent" === intentName) {
         recipeSelect(intent, session, callback);
+    } else if ("GiveInstructionControl" === intentName) {
+        giveInstructionControl(intent, session, callback);
+    } else if ("GiveInstructionIndex" === intentName) {
+        giveInstructionIndex(intent, session, callback);
     } else if ("AMAZON.StartOverIntent" === intentName) {
         recipeSearch(intent, session, callback);
     } else if ("AMAZON.RepeatIntent" === intentName) {
@@ -102,6 +138,8 @@ function onIntent(intentRequest, session, callback) {
         handleFinishSessionRequest(intent, session, callback);
     } else if ("AMAZON.CancelIntent" === intentName) {
         handleFinishSessionRequest(intent, session, callback);
+    } else if ("JokeIntent" === intentName) {
+        tellJoke(callback);
     } else {
         throw "Invalid intent";
     }
@@ -134,103 +172,14 @@ function getWelcomeResponse(callback) {
         buildSpeechletResponse("card", speechOutput, repromptText, false));
 }
 
-// function recipeSearch(intent, session, callback){
-//     var recipeName = intent.slots.Recipe.value.replace(/\s/g, '%20');
-
-//     var host = "api.bigoven.com";
-//     var path = "/recipes?pg=1&rpp=25&title_kw="
-//               + recipeName
-//               + "&api_key=" + apiKey + "&sort=quality";
-
-//     var post_options = {
-//         hostname: host,
-//         path: path,
-//         method: 'GET',
-//         headers: {
-//             'Content-Type': 'application/json'
-//         }
-//     };
-//     console.log(host+path);
-//     var req = http.request(post_options, function(res) {
-//         var output = "";
-//         var recipesObject = {};
-//         var recipesArray = [];
-            // var topFiveRecipes = [];
-
-//         res.on("data", function (chunk) {
-//             console.log(chunk);
-//             output += chunk;
-//         });
-//         res.on("error", console.log('Error'));
-//         res.on("end", function () {
-//             // recipesObject = JSON.parse(output);
-//             recipesObject = JSON.parse(mockData);
-
-//             //write to firebase
-//             recipesArray = recipesObject.Results.reverse();
-//             var speechOutput = "";
-
-//             for(var x = 0; x < 5 ; x++){
-        //         speechOutput = speechOutput + (x+1).toString() + " - " + recipesArray[x].Title + ", ";
-//                 speechOutput = speechOutput + recipesArray[x].Title + ", ";
-                // topFiveRecipes.push(recipesArray[x]);
-//                 console.log(speechOutput);
-//             }
-
-//             var repromptText = "Select a recipe";
-
-//             var sessionAttributes = {
-//                     "speechOutput": repromptText,
-//                     "repromptText": repromptText
-//                     // "currentQuestionIndex": currentQuestionIndex
-//                 };
-
-//             callback(sessionAttributes, buildSpeechletResponse("card", speechOutput, repromptText, false));
-//         })
-//     }).end();
-// }
-
 function recipeSearch(intent, session, callback){
-    var output = "";
-    var recipesObject = {};
-    var recipesArray = [];
-    var topFiveRecipes = [];
+    console.log('recipeSearch');
+  var recipeName = intent.slots.Recipe.value.replace(/\s/g, '%20');
 
-    recipesObject = mockData;
-
-    //write to firebase
-    recipesArray = recipesObject.Results.reverse();
-    var speechOutput = "Please select one of the following recipes. ";
-    var repromptText = "Please select one of the following recipes. ";
-
-    for(var x = 0; x < 5 ; x++){
-        speechOutput = speechOutput + (x+1).toString() + " - " + recipesArray[x].Title + ", ";
-        repromptText = speechOutput + (x+1).toString() + " - " + recipesArray[x].Title + ", ";
-        topFiveRecipes.push(recipesArray[x]);
-        console.log(speechOutput);
-    }
-
-    console.log(topFiveRecipes);
-
-    var sessionAttributes = {
-            "speechOutput": repromptText,
-            "repromptText": repromptText
-            // "currentQuestionIndex": currentQuestionIndex
-        };
-
-    callback(sessionAttributes, buildSpeechletResponse("card", speechOutput, repromptText, false));
-}
-
-function recipeSelect(intent, session, callback){
-    //session contains the json with recipe id
-    session = mockData;
-
-    var selectionId = mockData[intent.slots.Selection.value - 1].RecipeID;
-
-    var host = "api.bigoven.com";
-    var path = "/recipe/" + selectionId + "?api_key=" + apiKey;
-
-    console.log(host+path);
+    var host = "api.bigoven.com"
+    var path = "/recipes?pg=1&rpp=25&title_kw="
+              + recipeName
+              + "&api_key=" + apiKey + "&sort=quality";
 
     var post_options = {
         hostname: host,
@@ -240,44 +189,34 @@ function recipeSelect(intent, session, callback){
             'Content-Type': 'application/json'
         }
     };
-
+    // console.log(host+path);
     var req = http.request(post_options, function(res) {
         var output = "";
-        var recipeObject = {};
+        var recipesObject = {};
+        var recipesArray = [];
+        var topFiveRecipes = [];
 
         res.on("data", function (chunk) {
-            console.log(chunk);
-            output += chunk;
-        });
-        res.on("error", console.log('Error'));
+            output += chunk
+        })
+        res.on("error", console.log)
         res.on("end", function () {
+            recipesObject = JSON.parse(output);
+            recipesArray = recipesObject.Results.reverse();
 
-            recipeObject = JSON.parse();
+            var speechOutput = "Select a recipe. ";
+            var repromptText = "Select a recipe. ";
 
-            //write to firebase
-/** TO FIREBASE CODE **/
-/*
-var newObj = {};
-newObj.Title = recipeObject.Title;
-newObj.Ingredients = recipeObject.Ingredients
-newObj.Instructions = recipeObject.Instructions;
-var newstring = newObj.Instructions.replace(/[&\/\\#,+()$~%'":*?<>\r{}\n]/g, '').replace("..", "").trim();
-var array = newstring.split('. ')
-var replaceObj = [];
-for (var i = 0; i < array.length; i ++) {
-  replaceObj.push({
-    instruction : array[i]
-  })
-}
-newObj.Instructions = replaceObj;
-newObj.CurrentStep = 0;
-finalObj = JSON.stringify(newObj);
-console.log(finalObj);
+            for(var x = 0; x < 5 ; x++){
+                speechOutput = speechOutput + (x+1).toString() + " - " + recipesArray[x].Title + ", ";
 
-rootRef.set(finalObj);
-*/
-            var speechOutput = "You have selected " + recipeObject.Title + ". Ask me about the ingredients and cooking instructions.";
-            var repromptText = "You have selected " + recipeObject.Title + ". Ask me about the ingredients and cooking instructions.";
+                repromptText = repromptText + (x+1).toString() + " - " + recipesArray[x].Title + ", ";
+                topFiveRecipes.push(recipesArray[x]);
+            }
+
+            console.log(topFiveRecipes);
+
+            console.log(speechOutput);
 
             var sessionAttributes = {
                     "speechOutput": repromptText,
@@ -290,6 +229,128 @@ rootRef.set(finalObj);
     }).end();
 }
 
+function recipeSelect(intent, session, callback){
+    console.log('recipeSelect');
+
+  var selectionId = 480473;
+
+  var host = "api.bigoven.com";
+  var path = "/recipe/" + selectionId + "?api_key=" + apiKey;
+
+  var post_options = {
+      hostname: host,
+      path: path,
+      method: 'GET',
+      headers: {
+          'Content-Type': 'application/json'
+      }
+  };
+  // console.log(host+path);
+  var req = http.request(post_options, function(res) {
+      var output = "";
+      var recipeObject = {};
+      var newObj = {};
+      var finalObj = {};
+
+      res.on("data", function (chunk) {
+          output += chunk
+      })
+      res.on("error", console.log)
+      res.on("end", function () {
+          recipeObject = JSON.parse(output);
+
+          var newObj = {};
+          newObj.Title = recipeObject.Title;
+          newObj.Ingredients = recipeObject.Ingredients;
+          newObj.Instructions = recipeObject.Instructions;
+          var newstring = newObj.Instructions.replace(/[&\/\\#,+()$~%'":*?<>\r{}\n]/g, '').replace("..", "").trim();
+          var array = newstring.split('. ');
+           var replaceObj = [];
+        //   console.log(array);
+           for (var i = 1; i < array.length+1; i ++) {
+                replaceObj.push("Step " + i + ": " + array[i]);
+           }
+          // newObj.Instructions = replaceObj;
+          console.log(replaceObj);
+            newObj.Instructions = replaceObj;
+          newObj.CurrentStep = 0;
+          finalObj = JSON.stringify(newObj);
+
+          var speechOutput = "You have selected " + newObj.Title + ". Ask me about the ingredients and cooking instructions.";
+          var repromptText = "You have selected " + newObj.Title + ". Ask me about the ingredients and cooking instructions.";
+
+          var sessionAttributes = {
+                  "speechOutput": speechOutput,
+                  "repromptText": repromptText
+                  // "currentQuestionIndex": currentQuestionIndex
+              };
+
+        //   console.log(speechOutput);
+          callback(sessionAttributes, buildSpeechletResponse("card", speechOutput, repromptText, false));
+      })
+  }).end();
+}
+
+function giveInstructionControl(intent, session, callback){
+    console.log('giveInstructioncontrol');
+  var control = intent.slots.Control.value;
+
+//retrieve from firebase
+  var instructionsArray = mockInstructions;
+  var index = 4;
+  var speechOutput = ""
+  var repromptText = "Would you like to continue?"
+
+  if (control == 'next'){
+    index++;
+    speechOutput = instructionsArray[index];
+  } else if(control == 'previous' || control == 'last'){
+    index--;
+    speechOutput = instructionsArray[index];
+  } else {
+    speechOutput = "I didn't quite get that. Say next or previous";
+  }
+
+  var sessionAttributes = {
+    "speechOutput": speechOutput,
+    "repromptText": repromptText
+    // "currentQuestionIndex": currentQuestionIndex
+  };
+
+  callback(sessionAttributes, buildSpeechletResponse("card", speechOutput, repromptText, false));
+}
+
+function giveInstructionIndex(intent, session, callback){
+  console.log('giveInstructionIndex');
+  //retrieve from firebase
+  var index = 0;
+
+  var instructionsArray = mockInstructions;
+  var speechOutput = ""
+  var repromptText = "Would you like to continue?"
+
+  try {
+    index = parseInt(intent.slots.InstructionIndex.value)-1;
+    if(index < instructionsArray.length){
+        speechOutput = instructionsArray[index];    
+    } else {
+        speechOutput = "Step out of range. There are only " + instructionsArray.length.toString() + " steps";
+    }
+    
+  }
+  catch(err) {
+    speechOutput = "I didn't quite get that. Please give me the step number";
+  }
+
+  var sessionAttributes = {
+    "speechOutput": speechOutput,
+    "repromptText": repromptText
+  };
+
+  console.log(speechOutput);
+
+  callback(sessionAttributes, buildSpeechletResponse("card", speechOutput, repromptText, false));
+};
 
 
 function handleRepeatRequest(intent, session, callback) {
@@ -321,6 +382,11 @@ function handleFinishSessionRequest(intent, session, callback) {
     // End the session with a "Good bye!" if the user wants to quit the game
     callback(session.attributes,
         buildSpeechletResponseWithoutCard("Good bye!", "", true));
+}
+
+function tellJoke(callback){
+    var speechOutput = "Test";
+    callback(null, buildSpeechletResponseWithoutCard(speechOutput, null, false));
 }
 
 
@@ -370,858 +436,14 @@ function buildResponse(sessionAttributes, speechletResponse) {
     };
 }
 
-var mockData = [
-    {
-      "RecipeID": 480473,
-      "Title": "Chicken Breast",
-      "Cuisine": "",
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 0,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/chicken-breast\/480473",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/recipe-no-image.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/recipe-no-image.jpg",
-      "ReviewCount": 0,
-      "Poster": {
-        "UserID": 1953785,
-        "UserName": "yelay52",
-        "ImageURL48": "http:\/\/images.bigoven.com\/image\/upload\/t_recipe-48,d_avatar-default.png\/avatar-default.png",
-        "PhotoUrl": "http:\/\/photos.bigoven.com\/avatar\/photo\/avatar-default.png",
-        "IsPremium": false,
-        "IsKitchenHelper": false,
-        "PremiumExpiryDate": null,
-        "MemberSince": null,
-        "IsUsingRecurly": false,
-        "FirstName": null,
-        "LastName": null
-      },
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 1,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1364388055583)\/",
-      "MaxImageSquare": 256,
-      "TotalTries": 4,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/recipe-no-image.jpg"
-    },
-    {
-      "RecipeID": 462679,
-      "Title": "Chicken Breast",
-      "Cuisine": "",
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 0,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/chicken-breast\/462679",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/recipe-no-image.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/recipe-no-image.jpg",
-      "ReviewCount": 0,
-      "Poster": {
-        "UserID": 1532789,
-        "UserName": "malindameeks21",
-        "ImageURL48": "http:\/\/images.bigoven.com\/image\/upload\/t_recipe-48,d_avatar-default.png\/avatar-default.png",
-        "PhotoUrl": "http:\/\/photos.bigoven.com\/avatar\/photo\/avatar-default.png",
-        "IsPremium": true,
-        "IsKitchenHelper": false,
-        "PremiumExpiryDate": null,
-        "MemberSince": null,
-        "IsUsingRecurly": false,
-        "FirstName": null,
-        "LastName": null
-      },
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 5,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1362292763537)\/",
-      "MaxImageSquare": 256,
-      "TotalTries": 0,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/recipe-no-image.jpg"
-    },
-    {
-      "RecipeID": 60255,
-      "Title": "Chicken Breasts",
-      "Cuisine": "American",
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 0,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/chicken-breasts\/60255",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/recipe-no-image.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/recipe-no-image.jpg",
-      "ReviewCount": 0,
-      "Poster": null,
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 6,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1072915200000)\/",
-      "MaxImageSquare": 256,
-      "TotalTries": 1,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/recipe-no-image.jpg"
-    },
-    {
-      "RecipeID": 423607,
-      "Title": "Chicken Breasts",
-      "Cuisine": "",
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 0,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/chicken-breasts\/423607",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/recipe-no-image.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/recipe-no-image.jpg",
-      "ReviewCount": 0,
-      "Poster": {
-        "UserID": 1832367,
-        "UserName": "rliccardi31",
-        "ImageURL48": "http:\/\/images.bigoven.com\/image\/upload\/t_recipe-48,d_avatar-default.png\/avatar-default.png",
-        "PhotoUrl": "http:\/\/photos.bigoven.com\/avatar\/photo\/avatar-default.png",
-        "IsPremium": false,
-        "IsKitchenHelper": false,
-        "PremiumExpiryDate": null,
-        "MemberSince": null,
-        "IsUsingRecurly": false,
-        "FirstName": null,
-        "LastName": null
-      },
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 6,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1358079879590)\/",
-      "MaxImageSquare": 256,
-      "TotalTries": 2,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/recipe-no-image.jpg"
-    },
-    {
-      "RecipeID": 148066,
-      "Title": "Chicken Breasts",
-      "Cuisine": "American",
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 0,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/chicken-breasts\/148066",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/recipe-no-image.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/recipe-no-image.jpg",
-      "ReviewCount": 0,
-      "Poster": null,
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 1,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1072915200000)\/",
-      "MaxImageSquare": 256,
-      "TotalTries": 1,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/recipe-no-image.jpg"
-    },
-    {
-      "RecipeID": 813780,
-      "Title": "Chicken Breasts",
-      "Cuisine": "Dinner",
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 0,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/chicken-breasts\/813780",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/recipe-no-image.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/recipe-no-image.jpg",
-      "ReviewCount": 0,
-      "Poster": {
-        "UserID": 2317706,
-        "UserName": "emulou",
-        "ImageURL48": "http:\/\/images.bigoven.com\/image\/upload\/t_recipe-48,d_avatar-default.png\/avatar-default.png",
-        "PhotoUrl": "http:\/\/photos.bigoven.com\/avatar\/photo\/avatar-default.png",
-        "IsPremium": false,
-        "IsKitchenHelper": false,
-        "PremiumExpiryDate": null,
-        "MemberSince": null,
-        "IsUsingRecurly": false,
-        "FirstName": null,
-        "LastName": null
-      },
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 3,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1393519113547)\/",
-      "MaxImageSquare": 256,
-      "TotalTries": 4,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/recipe-no-image.jpg"
-    },
-    {
-      "RecipeID": 456826,
-      "Title": "Chicken breasts",
-      "Cuisine": "",
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 0,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/chicken-breasts\/456826",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/recipe-no-image.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/recipe-no-image.jpg",
-      "ReviewCount": 0,
-      "Poster": {
-        "UserID": 475556,
-        "UserName": "mqboom",
-        "ImageURL48": "http:\/\/images.bigoven.com\/image\/upload\/t_recipe-48,d_avatar-default.png\/avatar-default.png",
-        "PhotoUrl": "http:\/\/photos.bigoven.com\/avatar\/photo\/avatar-default.png",
-        "IsPremium": false,
-        "IsKitchenHelper": false,
-        "PremiumExpiryDate": null,
-        "MemberSince": null,
-        "IsUsingRecurly": false,
-        "FirstName": null,
-        "LastName": null
-      },
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 4,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1361620335980)\/",
-      "MaxImageSquare": 256,
-      "TotalTries": 0,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/recipe-no-image.jpg"
-    },
-    {
-      "RecipeID": 1218779,
-      "Title": "Chicken breast",
-      "Cuisine": "",
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 0,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/chicken-breast\/1218779",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/recipe-no-image.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/recipe-no-image.jpg",
-      "ReviewCount": 0,
-      "Poster": {
-        "UserID": 2756430,
-        "UserName": "en4noelj8p3b6",
-        "ImageURL48": "http:\/\/images.bigoven.com\/image\/upload\/t_recipe-48,d_avatar-default.png\/avatar-default.png",
-        "PhotoUrl": "http:\/\/photos.bigoven.com\/avatar\/photo\/avatar-default.png",
-        "IsPremium": false,
-        "IsKitchenHelper": false,
-        "PremiumExpiryDate": null,
-        "MemberSince": null,
-        "IsUsingRecurly": false,
-        "FirstName": null,
-        "LastName": null
-      },
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 1,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1434493275160)\/",
-      "MaxImageSquare": 256,
-      "TotalTries": 0,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/recipe-no-image.jpg"
-    },
-    {
-      "RecipeID": 60254,
-      "Title": "Chicken Breasts",
-      "Cuisine": "American",
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 0,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/chicken-breasts\/60254",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/recipe-no-image.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/recipe-no-image.jpg",
-      "ReviewCount": 0,
-      "Poster": null,
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 8,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1072915200000)\/",
-      "MaxImageSquare": 256,
-      "TotalTries": 1,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/recipe-no-image.jpg"
-    },
-    {
-      "RecipeID": 557802,
-      "Title": "Chicken Breasts",
-      "Cuisine": null,
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 0,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/chicken-breasts\/557802",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/recipe-no-image.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/recipe-no-image.jpg",
-      "ReviewCount": 0,
-      "Poster": {
-        "UserID": 1956574,
-        "UserName": "lwardsmb",
-        "ImageURL48": "http:\/\/images.bigoven.com\/image\/upload\/t_recipe-48,d_avatar-default.png\/avatar\/lwardsmb.jpg",
-        "PhotoUrl": "http:\/\/photos.bigoven.com\/avatar\/photo\/lwardsmb.jpg",
-        "IsPremium": true,
-        "IsKitchenHelper": false,
-        "PremiumExpiryDate": null,
-        "MemberSince": null,
-        "IsUsingRecurly": false,
-        "FirstName": null,
-        "LastName": null
-      },
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 2,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1372010986000)\/",
-      "MaxImageSquare": 256,
-      "TotalTries": 0,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/recipe-no-image.jpg"
-    },
-    {
-      "RecipeID": 159709,
-      "Title": "Chicken Breasts",
-      "Cuisine": "American",
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 4.2307692307692,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/chicken-breasts\/159709",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/chicken-breasts-2.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/chicken-breasts-2.jpg",
-      "ReviewCount": 13,
-      "Poster": {
-        "UserID": 1776993,
-        "UserName": "DonnaJN",
-        "ImageURL48": "http:\/\/images.bigoven.com\/image\/upload\/t_recipe-48,d_avatar-default.png\/avatar-default.png",
-        "PhotoUrl": "http:\/\/photos.bigoven.com\/avatar\/photo\/avatar-default.png",
-        "IsPremium": true,
-        "IsKitchenHelper": false,
-        "PremiumExpiryDate": null,
-        "MemberSince": null,
-        "IsUsingRecurly": false,
-        "FirstName": null,
-        "LastName": null
-      },
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 3,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1128165918480)\/",
-      "MaxImageSquare": 320,
-      "TotalTries": 102,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/chicken-breasts-2.jpg"
-    },
-    {
-      "RecipeID": 160094,
-      "Title": "Chicken Breast Stuffed with Feta Cheese and Oregano",
-      "Cuisine": "Greek",
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 4.3589743589744,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/chicken-breast-stuffed-with-feta-cheese-and-oregano\/160094",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/chicken-breast-stuffed-with-feta-ch-8.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/chicken-breast-stuffed-with-feta-ch-8.jpg",
-      "ReviewCount": 39,
-      "Poster": {
-        "UserID": 24150,
-        "UserName": "blueskier",
-        "ImageURL48": "http:\/\/images.bigoven.com\/image\/upload\/t_recipe-48,d_avatar-default.png\/avatar\/blueskier.jpg",
-        "PhotoUrl": "http:\/\/photos.bigoven.com\/avatar\/photo\/blueskier.jpg",
-        "IsPremium": true,
-        "IsKitchenHelper": false,
-        "PremiumExpiryDate": null,
-        "MemberSince": null,
-        "IsUsingRecurly": false,
-        "FirstName": null,
-        "LastName": null
-      },
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 4,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1132951574000)\/",
-      "MaxImageSquare": 640,
-      "TotalTries": 2189,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/chicken-breast-stuffed-with-feta-ch-8.jpg"
-    },
-    {
-      "RecipeID": 163741,
-      "Title": "Garlic-roasted Chicken Breasts",
-      "Cuisine": "American",
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 3.8181818181818,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/garlic-roasted-chicken-breasts\/163741",
-      "ImageURL": "http:\/\/photos.bigoven.com\/recipe\/hero\/garlic-roasted-chicken-breasts-4c10b0.jpg",
-      "ImageURL120": "http:\/\/photos.bigoven.com\/recipe\/hero\/garlic-roasted-chicken-breasts-4c10b0.jpg",
-      "ReviewCount": 11,
-      "Poster": {
-        "UserID": 9972,
-        "UserName": "chrism2607",
-        "ImageURL48": "http:\/\/images.bigoven.com\/image\/upload\/t_recipe-48,d_avatar-default.png\/avatar\/chrism2607.jpg",
-        "PhotoUrl": "http:\/\/photos.bigoven.com\/avatar\/photo\/chrism2607.jpg",
-        "IsPremium": true,
-        "IsKitchenHelper": false,
-        "PremiumExpiryDate": null,
-        "MemberSince": null,
-        "IsUsingRecurly": false,
-        "FirstName": null,
-        "LastName": null
-      },
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 4,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1190406186000)\/",
-      "MaxImageSquare": 1280,
-      "TotalTries": 657,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/garlic-roasted-chicken-breasts-4c10b0.jpg"
-    },
-    {
-      "RecipeID": 185639,
-      "Title": "Apricot Chicken Breasts",
-      "Cuisine": "American",
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 4.25,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/apricot-chicken-breasts\/185639",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/apricot-chicken-breasts.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/apricot-chicken-breasts.jpg",
-      "ReviewCount": 4,
-      "Poster": {
-        "UserID": 783327,
-        "UserName": "stpagh",
-        "ImageURL48": "http:\/\/images.bigoven.com\/image\/upload\/t_recipe-48,d_avatar-default.png\/avatar\/stpagh.jpg",
-        "PhotoUrl": "http:\/\/photos.bigoven.com\/avatar\/photo\/stpagh.jpg",
-        "IsPremium": true,
-        "IsKitchenHelper": false,
-        "PremiumExpiryDate": null,
-        "MemberSince": null,
-        "IsUsingRecurly": false,
-        "FirstName": null,
-        "LastName": null
-      },
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 6,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1284393583000)\/",
-      "MaxImageSquare": 512,
-      "TotalTries": 86,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/apricot-chicken-breasts.jpg"
-    },
-    {
-      "RecipeID": 158373,
-      "Title": "Stuffed Chicken Breasts",
-      "Cuisine": "American",
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 4,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/stuffed-chicken-breasts\/158373",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/stuffed-chicken-breasts-7.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/stuffed-chicken-breasts-7.jpg",
-      "ReviewCount": 5,
-      "Poster": null,
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 2,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1114807679000)\/",
-      "MaxImageSquare": 256,
-      "TotalTries": 119,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/stuffed-chicken-breasts-7.jpg"
-    },
-    {
-      "RecipeID": 854,
-      "Title": "Honey Baked Chicken Breasts",
-      "Cuisine": "American",
-      "Category": "Main Dish",
-      "Subcategory": "",
-      "Microcategory": "",
-      "StarRating": 4,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/honey-baked-chicken-breasts\/854",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/honey-baked-chicken-breasts.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/honey-baked-chicken-breasts.jpg",
-      "ReviewCount": 17,
-      "Poster": null,
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 1,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1072915200000)\/",
-      "MaxImageSquare": 320,
-      "TotalTries": 161,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/honey-baked-chicken-breasts.jpg"
-    },
-    {
-      "RecipeID": 162262,
-      "Title": "Mustard Lemon Chicken Breasts",
-      "Cuisine": "American",
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 3.9444444444444,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/mustard-lemon-chicken-breasts\/162262",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/mustard-lemon-chicken-breasts-3.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/mustard-lemon-chicken-breasts-3.jpg",
-      "ReviewCount": 18,
-      "Poster": {
-        "UserID": 20236,
-        "UserName": "RKG1",
-        "ImageURL48": "http:\/\/images.bigoven.com\/image\/upload\/t_recipe-48,d_avatar-default.png\/avatar\/11060509554620236.jpg",
-        "PhotoUrl": "http:\/\/photos.bigoven.com\/avatar\/photo\/11060509554620236.jpg",
-        "IsPremium": true,
-        "IsKitchenHelper": false,
-        "PremiumExpiryDate": null,
-        "MemberSince": null,
-        "IsUsingRecurly": false,
-        "FirstName": null,
-        "LastName": null
-      },
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 4,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1166571465213)\/",
-      "MaxImageSquare": 1280,
-      "TotalTries": 141,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/mustard-lemon-chicken-breasts-3.jpg"
-    },
-    {
-      "RecipeID": 182008,
-      "Title": "Apricot Almond Chicken Breasts",
-      "Cuisine": "American",
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 4.6666666666667,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/apricot-almond-chicken-breasts\/182008",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/apricot-almond-chicken-breasts.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/apricot-almond-chicken-breasts.jpg",
-      "ReviewCount": 3,
-      "Poster": {
-        "UserID": 541714,
-        "UserName": "horikor",
-        "ImageURL48": "http:\/\/images.bigoven.com\/image\/upload\/t_recipe-48,d_avatar-default.png\/avatar-default.png",
-        "PhotoUrl": "http:\/\/photos.bigoven.com\/avatar\/photo\/avatar-default.png",
-        "IsPremium": true,
-        "IsKitchenHelper": false,
-        "PremiumExpiryDate": null,
-        "MemberSince": null,
-        "IsUsingRecurly": false,
-        "FirstName": null,
-        "LastName": null
-      },
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 4,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1274203297770)\/",
-      "MaxImageSquare": 1280,
-      "TotalTries": 48,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/apricot-almond-chicken-breasts.jpg"
-    },
-    {
-      "RecipeID": 163825,
-      "Title": "Easy Crockpot Chicken Breasts",
-      "Cuisine": "American",
-      "Category": "Main Dish",
-      "Subcategory": "Slow Cooker",
-      "Microcategory": "",
-      "StarRating": 3.3333333333333,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/easy-crockpot-chicken-breasts\/163825",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/easy-crockpot-chicken-breasts-3.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/easy-crockpot-chicken-breasts-3.jpg",
-      "ReviewCount": 5,
-      "Poster": {
-        "UserID": 57974,
-        "UserName": "pamcastle",
-        "ImageURL48": "http:\/\/images.bigoven.com\/image\/upload\/t_recipe-48,d_avatar-default.png\/avatar\/pamcastle.jpg",
-        "PhotoUrl": "http:\/\/photos.bigoven.com\/avatar\/photo\/pamcastle.jpg",
-        "IsPremium": true,
-        "IsKitchenHelper": false,
-        "PremiumExpiryDate": null,
-        "MemberSince": null,
-        "IsUsingRecurly": false,
-        "FirstName": null,
-        "LastName": null
-      },
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 6,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1192182876583)\/",
-      "MaxImageSquare": 256,
-      "TotalTries": 121,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/easy-crockpot-chicken-breasts-3.jpg"
-    },
-    {
-      "RecipeID": 158142,
-      "Title": "Brie and Apple Chicken Breasts",
-      "Cuisine": "American",
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 4.5454545454546,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/brie-and-apple-chicken-breasts\/158142",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/brie-and-apple-chicken-breasts-2.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/brie-and-apple-chicken-breasts-2.jpg",
-      "ReviewCount": 96,
-      "Poster": {
-        "UserID": 16150,
-        "UserName": "cabassakat",
-        "ImageURL48": "http:\/\/images.bigoven.com\/image\/upload\/t_recipe-48,d_avatar-default.png\/avatar-default.png",
-        "PhotoUrl": "http:\/\/photos.bigoven.com\/avatar\/photo\/avatar-default.png",
-        "IsPremium": false,
-        "IsKitchenHelper": false,
-        "PremiumExpiryDate": null,
-        "MemberSince": null,
-        "IsUsingRecurly": false,
-        "FirstName": null,
-        "LastName": null
-      },
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 4,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1106227043000)\/",
-      "MaxImageSquare": 256,
-      "TotalTries": 556,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/brie-and-apple-chicken-breasts-2.jpg"
-    },
-    {
-      "RecipeID": 127259,
-      "Title": "Spinach-Stuffed Chicken Breasts",
-      "Cuisine": "American",
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 4.6666666666667,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/spinach-stuffed-chicken-breasts\/127259",
-      "ImageURL": "http:\/\/photos.bigoven.com\/recipe\/hero\/spinach-stuffed-chicken-breast-b9e94f.jpg",
-      "ImageURL120": "http:\/\/photos.bigoven.com\/recipe\/hero\/spinach-stuffed-chicken-breast-b9e94f.jpg",
-      "ReviewCount": 3,
-      "Poster": null,
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 6,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1072915200000)\/",
-      "MaxImageSquare": 1280,
-      "TotalTries": 140,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/spinach-stuffed-chicken-breast-b9e94f.jpg"
-    },
-    {
-      "RecipeID": 158653,
-      "Title": "Chicken Breasts Normandy",
-      "Cuisine": "American",
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 4,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/chicken-breasts-normandy\/158653",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/chicken-breasts-normandy-2.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/chicken-breasts-normandy-2.jpg",
-      "ReviewCount": 5,
-      "Poster": {
-        "UserID": 21250,
-        "UserName": "tyson",
-        "ImageURL48": "http:\/\/images.bigoven.com\/image\/upload\/t_recipe-48,d_avatar-default.png\/avatar\/06070701101821250.jpg",
-        "PhotoUrl": "http:\/\/photos.bigoven.com\/avatar\/photo\/06070701101821250.jpg",
-        "IsPremium": false,
-        "IsKitchenHelper": false,
-        "PremiumExpiryDate": null,
-        "MemberSince": null,
-        "IsUsingRecurly": false,
-        "FirstName": null,
-        "LastName": null
-      },
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 4,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1121554554790)\/",
-      "MaxImageSquare": 256,
-      "TotalTries": 31,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/chicken-breasts-normandy-2.jpg"
-    },
-    {
-      "RecipeID": 158703,
-      "Title": "South of the Border Chicken Breasts",
-      "Cuisine": "Mexican",
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 3.5,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/south-of-the-border-chicken-breasts\/158703",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/south-of-the-border-chicken-breasts-2.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/south-of-the-border-chicken-breasts-2.jpg",
-      "ReviewCount": 2,
-      "Poster": {
-        "UserID": 21250,
-        "UserName": "tyson",
-        "ImageURL48": "http:\/\/images.bigoven.com\/image\/upload\/t_recipe-48,d_avatar-default.png\/avatar\/06070701101821250.jpg",
-        "PhotoUrl": "http:\/\/photos.bigoven.com\/avatar\/photo\/06070701101821250.jpg",
-        "IsPremium": false,
-        "IsKitchenHelper": false,
-        "PremiumExpiryDate": null,
-        "MemberSince": null,
-        "IsUsingRecurly": false,
-        "FirstName": null,
-        "LastName": null
-      },
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 4,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1121736083683)\/",
-      "MaxImageSquare": 256,
-      "TotalTries": 62,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/south-of-the-border-chicken-breasts-2.jpg"
-    },
-    {
-      "RecipeID": 158716,
-      "Title": "Triple Citrus Chicken Breasts",
-      "Cuisine": "American",
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 4.1724137931035,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/triple-citrus-chicken-breasts\/158716",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/triple-citrus-chicken-breasts-3.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/triple-citrus-chicken-breasts-3.jpg",
-      "ReviewCount": 30,
-      "Poster": {
-        "UserID": 21250,
-        "UserName": "tyson",
-        "ImageURL48": "http:\/\/images.bigoven.com\/image\/upload\/t_recipe-48,d_avatar-default.png\/avatar\/06070701101821250.jpg",
-        "PhotoUrl": "http:\/\/photos.bigoven.com\/avatar\/photo\/06070701101821250.jpg",
-        "IsPremium": false,
-        "IsKitchenHelper": false,
-        "PremiumExpiryDate": null,
-        "MemberSince": null,
-        "IsUsingRecurly": false,
-        "FirstName": null,
-        "LastName": null
-      },
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 6,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1121736212420)\/",
-      "MaxImageSquare": 256,
-      "TotalTries": 331,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/triple-citrus-chicken-breasts-3.jpg"
-    },
-    {
-      "RecipeID": 179919,
-      "Title": "Almond Crusted Chicken Breast",
-      "Cuisine": "American",
-      "Category": "Main Dish",
-      "Subcategory": "Poultry - Chicken",
-      "Microcategory": "",
-      "StarRating": 5,
-      "StarRatingIMG": null,
-      "WebURL": "http:\/\/www.bigoven.com\/recipe\/almond-crusted-chicken-breast\/179919",
-      "ImageURL": "http:\/\/redirect.bigoven.com\/pics\/almond-crusted-chicken-breast.jpg",
-      "ImageURL120": "http:\/\/redirect.bigoven.com\/pics\/rs\/120\/almond-crusted-chicken-breast.jpg",
-      "ReviewCount": 1,
-      "Poster": {
-        "UserID": 753655,
-        "UserName": "jsvendblad",
-        "ImageURL48": "http:\/\/images.bigoven.com\/image\/upload\/t_recipe-48,d_avatar-default.png\/avatar\/200410021811753655.jpg",
-        "PhotoUrl": "http:\/\/photos.bigoven.com\/avatar\/photo\/200410021811753655.jpg",
-        "IsPremium": true,
-        "IsKitchenHelper": false,
-        "PremiumExpiryDate": null,
-        "MemberSince": null,
-        "IsUsingRecurly": false,
-        "FirstName": null,
-        "LastName": null
-      },
-      "IsPrivate": false,
-      "HideFromPublicSearch": false,
-      "IsBookmark": null,
-      "BookmarkURL": null,
-      "YieldNumber": 2,
-      "QualityScore": 0,
-      "CreationDate": "\/Date(1268248319000)\/",
-      "MaxImageSquare": 640,
-      "TotalTries": 62,
-      "HeroPhotoUrl": "http:\/\/photos.bigoven.com\/recipe\/hero\/almond-crusted-chicken-breast.jpg"
-    }
-  ];
+var mockInstructions = [ 'Step 1: Mix two parts garlic powder to one part each salt pepper onion powder and paprika',
+  'Step 2: For 2 large chicken breasts I use about 1 tsp garlic powder and 12 tsp each of everything else',
+  'Step 3: Evenly sprinkle the chicken breasts with the seasoning mixture.Heat a oven-safe panskillet on moderately high heat',
+  'Step 4: Add about 1-2 TB spoon of oil to the pan',
+  'Step 5: Once heated place the chicken in the pan',
+  'Step 6: Cook until golden brown on each side – about 3 minutes no more! on each side.Transfer the pan to the oven',
+  'Step 7: Bake in preheated oven on the top rack for about 20 minutes until the internal temperature of the chicken breast reaches 165 degrees and juices run clear.Remove from heat',
+  'Step 8: Allow the chicken breasts to sit for about 5 minutes to allow the juices to redistribute',
+  'Step 9: Serve as desired',
+  'Step 10: Store leftovers in an airtight container in the refrigerator.',
+  'Step 11: undefined' ]

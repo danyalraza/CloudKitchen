@@ -1,3 +1,3 @@
-# clarilexa
-Clarifai + Alexa recipe thing
+# CloudKitchen
+Alexa recipe thing
 Woohoo

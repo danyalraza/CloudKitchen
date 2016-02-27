@@ -41,7 +41,7 @@ var apiKey = "1a2pNH4Ed5Yt15zsqR28Q2MUXJt4gG7B";
 // etc.) The JSON body of the request is provided in the event parameter.
 exports.handler = function (event, context) {
     try {
-         
+
     if (event.session.application.applicationId !== "amzn1.echo-sdk-ams.app.10bc99aa-7ab8-45c2-9a70-d9c24abaaa15") {
         context.fail("Invalid Application ID");
      }
@@ -71,7 +71,7 @@ exports.handler = function (event, context) {
     }
 };
 
-//Called when the session starts. 
+//Called when the session starts.
 function onSessionStarted(sessionStartedRequest, session) {
 }
 
@@ -156,7 +156,7 @@ function getWelcomeResponse(callback) {
 //         var recipesObject = {};
 //         var recipesArray = [];
             // var topFiveRecipes = [];
-        
+
 //         res.on("data", function (chunk) {
 //             console.log(chunk);
 //             output += chunk;
@@ -178,14 +178,14 @@ function getWelcomeResponse(callback) {
 //             }
 
 //             var repromptText = "Select a recipe";
-            
+
 //             var sessionAttributes = {
 //                     "speechOutput": repromptText,
 //                     "repromptText": repromptText
 //                     // "currentQuestionIndex": currentQuestionIndex
 //                 };
-        
-//             callback(sessionAttributes, buildSpeechletResponse("card", speechOutput, repromptText, false));            
+
+//             callback(sessionAttributes, buildSpeechletResponse("card", speechOutput, repromptText, false));
 //         })
 //     }).end();
 // }
@@ -211,20 +211,20 @@ function recipeSearch(intent, session, callback){
     }
 
     console.log(topFiveRecipes);
-    
+
     var sessionAttributes = {
             "speechOutput": repromptText,
             "repromptText": repromptText
             // "currentQuestionIndex": currentQuestionIndex
         };
 
-    callback(sessionAttributes, buildSpeechletResponse("card", speechOutput, repromptText, false));     
+    callback(sessionAttributes, buildSpeechletResponse("card", speechOutput, repromptText, false));
 }
 
 function recipeSelect(intent, session, callback){
     //session contains the json with recipe id
     session = mockData;
-    
+
     var selectionId = mockData[intent.slots.Selection.value - 1].RecipeID;
 
     var host = "api.bigoven.com";
@@ -244,7 +244,7 @@ function recipeSelect(intent, session, callback){
     var req = http.request(post_options, function(res) {
         var output = "";
         var recipeObject = {};
-        
+
         res.on("data", function (chunk) {
             console.log(chunk);
             output += chunk;
@@ -255,17 +255,37 @@ function recipeSelect(intent, session, callback){
             recipeObject = JSON.parse();
 
             //write to firebase
+/** TO FIREBASE CODE **/
+/*
+var newObj = {};
+newObj.Title = recipeObject.Title;
+newObj.Ingredients = recipeObject.Ingredients
+newObj.Instructions = recipeObject.Instructions;
+var newstring = newObj.Instructions.replace(/[&\/\\#,+()$~%'":*?<>\r{}\n]/g, '').replace("..", "").trim();
+var array = newstring.split('. ')
+var replaceObj = [];
+for (var i = 0; i < array.length; i ++) {
+  replaceObj.push({
+    instruction : array[i]
+  })
+}
+newObj.Instructions = replaceObj;
+newObj.CurrentStep = 0;
+finalObj = JSON.stringify(newObj);
+console.log(finalObj);
 
+rootRef.set(finalObj);
+*/
             var speechOutput = "You have selected " + recipeObject.Title + ". Ask me about the ingredients and cooking instructions.";
             var repromptText = "You have selected " + recipeObject.Title + ". Ask me about the ingredients and cooking instructions.";
-            
+
             var sessionAttributes = {
                     "speechOutput": repromptText,
                     "repromptText": repromptText
                     // "currentQuestionIndex": currentQuestionIndex
                 };
-        
-            callback(sessionAttributes, buildSpeechletResponse("card", speechOutput, repromptText, false));            
+
+            callback(sessionAttributes, buildSpeechletResponse("card", speechOutput, repromptText, false));
         })
     }).end();
 }

@@ -18,6 +18,8 @@ var recipeRef = rootRef.child('recipe');
           });
         });
 
+        /** CODE NEEDS TO BE REDONE WITH ALEXA INPUT **/
+/*
         //Alexa what was step __ again?
         setBtn.addEventListener('click', function(){
             stepRef.set(+(document.getElementById('stepNumber').value) - 1);
@@ -37,3 +39,4 @@ var recipeRef = rootRef.child('recipe');
         prevBtn.addEventListener('click', function(){
             stepRef.set((step - 1));
         });
+*/

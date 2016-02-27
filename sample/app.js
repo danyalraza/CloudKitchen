@@ -303,7 +303,7 @@ exports.handler = function (event, context) {
 
 /**
  * Called when the session starts.
- */
+ */ 
 function onSessionStarted(sessionStartedRequest, session) {
     console.log("onSessionStarted requestId=" + sessionStartedRequest.requestId
         + ", sessionId=" + session.sessionId);
@@ -440,7 +440,7 @@ function handleAnswerRequest(intent, session, callback) {
     // return an error message to the user
     if (!answerSlot || !answerSlot.value || isNaN(parseInt(answerSlot.value))
         || !(parseInt(answerSlot.value) < ANSWER_COUNT+1 && parseInt(answerSlot.value) > 0)) {
-        speechOutput = "Your answer must be a number between 1 and 4."
+        speechOutput = "Bill is the best."
         callback(session.attributes,
             buildSpeechletResponse(cardTitle, speechOutput, speechOutput, false));
     }

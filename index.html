@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=utf-8>
+    <title>Realtime Message Board</title>
+		<!-- Latest compiled and minified CSS -->
+  <script src="https://cdn.firebase.com/js/client/2.4.1/firebase.js"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<!-- Optional theme -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="form-group">
+      <input type="text" id="stepNumber" class="form-control">
+      <button id="nextBtn" class="btn btn-primary">Next step</button>
+      <button id="currBtn" class="btn btn-primary">Repeat Step</button>
+      <button id="prevBtn" class="btn btn-primary">Previous Step</button>
+      <button id="setBtn" class="btn btn-danger">Set Step</button>
+  </div>
+
+</div>
+  <script>
+        var step;
+        var myJson;
+        rootRef = new Firebase('https://fiery-heat-3854.firebaseio.com/');
+
+        var stepRef = rootRef.child('step');
+        var recipeRef = rootRef.child('recipe');
+
+        rootRef.on('value', function(rootSnapshot){
+          rootRef.child('step').on('value', function(stepSnapshot){
+            step = stepSnapshot.val();
+          });
+          rootRef.child('recipe').on('value', function(recipeSnapshot){
+            myJson = recipeSnapshot.val();
+            console.log("Step " + (step + 1) + ", " + myJson[step]);
+          });
+        });
+
+        //Alexa what was step __ again?
+        setBtn.addEventListener('click', function(){
+            stepRef.set(+(document.getElementById('stepNumber').value) - 1);
+        })
+
+        //Alexa, next step please
+        nextBtn.addEventListener('click', function(){
+            stepRef.set((step + 1));
+        });
+
+        //Alexa, could you repeat the step again?
+        currBtn.addEventListener('click', function(){
+          console.log("Step " + (step + 1) + ", " + myJson[step]);
+        });
+
+        //Alexa, what was the last step?
+        prevBtn.addEventListener('click', function(){
+            stepRef.set((step - 1));
+        });
+
+  </script>
+</body>
+</html>

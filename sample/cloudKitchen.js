@@ -18,6 +18,7 @@
 'use strict';
 
 var http = require('http');
+// var Firebase = require("firebase");
 // var nodemailer = require('nodemailer');
 
 // //emailer
@@ -386,7 +387,10 @@ function handleFinishSessionRequest(intent, session, callback) {
 
 function tellJoke(callback){
     var speechOutput = "Test";
-    callback(null, buildSpeechletResponseWithoutCard(speechOutput, null, false));
+    var randomIndex = Math.floor(Math.random() * (joke.length-1 + 1));
+    console.log(randomIndex);
+
+    callback(null, buildSpeechletResponseWithoutCard(jokes[randomIndex], null, false));
 }
 
 
@@ -447,3 +451,13 @@ var mockInstructions = [ 'Step 1: Mix two parts garlic powder to one part each s
   'Step 9: Serve as desired',
   'Step 10: Store leftovers in an airtight container in the refrigerator.',
   'Step 11: undefined' ]
+
+
+
+var jokes = [
+  "Mushroom walks in a bar, bartender says hey you can't drink here. Mushroom says why not, Im a Fun-gi!",
+  "What do you call a fake noodle? An Impasta.",
+  "Why don't eggs tell jokes? They'd crack each other up!",
+  "Your cooking",
+  "What does a nosey pepper do? Gets jalapeno business!"
+]

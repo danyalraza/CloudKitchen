@@ -3,7 +3,6 @@ var Firebase = require('firebase');
 var rootRef = new Firebase('https://fiery-heat-3854.firebaseio.com/')
 var step;
 var myJson;
-rootRef = new Firebase('https://fiery-heat-3854.firebaseio.com/');
 
 var stepRef = rootRef.child('step');
 var recipeRef = rootRef.child('recipe');

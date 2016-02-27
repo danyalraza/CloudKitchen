@@ -14,76 +14,11 @@
 	<!-- Latest compiled and minified JavaScript -->
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 </head>
-<body>
-  <div class="container">
-    <div class="form-group">
-      <input type="text" id="stepNumber" class="form-control">
-      <button id="nextBtn" class="btn btn-primary">Next step</button>
-      <button id="currBtn" class="btn btn-primary">Repeat Step</button>
-      <button id="prevBtn" class="btn btn-primary">Previous Step</button>
-      <button id="setBtn" class="btn btn-danger">Set Step</button>
+<body ng-app="myApp">
+  <div ng-controller="MainCtrl">
+    <input type="text" ng-model="enteredValue">
+        </br>
+    <button type="button" ng-Click="findValue(enteredValue)">Search</button>
   </div>
-
-</div>
-  <script>
-        var step;
-        var myJson;
-        var maxSteps;
-        rootRef = new Firebase('https://fiery-heat-3854.firebaseio.com/');
-
-        //var myRecipe = {"Title":"Almond Crusted Chicken Breast","Ingredients":[{"IngredientID":1852810,"DisplayIndex":0,"IsHeading":false,"Name":"Chicken breasts","HTMLName":"<a href=\"http://www.bigoven.com/glossary/chicken%20breast\" class=\"glosslink\">Chicken breast</a>s","Quantity":4,"DisplayQuantity":"4","Unit":"6 oz","MetricQuantity":4,"MetricDisplayQuantity":"4","MetricUnit":"6 oz","PreparationNotes":"butterflied","IngredientInfo":null,"IsLinked":false},{"IngredientID":1852811,"DisplayIndex":1,"IsHeading":false,"Name":"Coconut oil","HTMLName":"<a href=\"http://www.bigoven.com/glossary/coconut\" class=\"glosslink\">Coconut</a> oil","Quantity":2,"DisplayQuantity":"2","Unit":"tbsp","MetricQuantity":30,"MetricDisplayQuantity":"30","MetricUnit":"ml","PreparationNotes":null,"IngredientInfo":{"Name":"Coconut","Department":"Produce","MasterIngredientID":321,"UsuallyOnHand":false},"IsLinked":true},{"IngredientID":1852812,"DisplayIndex":2,"IsHeading":false,"Name":"Almond Flour","HTMLName":"<a href=\"http://www.bigoven.com/glossary/almond\" class=\"glosslink\">Almond</a> Flour","Quantity":1,"DisplayQuantity":"1","Unit":"cup","MetricQuantity":237,"MetricDisplayQuantity":"237","MetricUnit":"ml","PreparationNotes":"blanched ","IngredientInfo":null,"IsLinked":true},{"IngredientID":1852813,"DisplayIndex":3,"IsHeading":false,"Name":"Sea salt","HTMLName":"Sea <a href=\"http://www.bigoven.com/glossary/salt\" class=\"glosslink\">salt</a>","Quantity":3,"DisplayQuantity":"3","Unit":"pinches ","MetricQuantity":3,"MetricDisplayQuantity":"3","MetricUnit":"pinches ","PreparationNotes":"to taste","IngredientInfo":{"Name":"Salt","Department":"Spices","MasterIngredientID":6,"UsuallyOnHand":true},"IsLinked":true}],"Instructions":[{"Instruction":"Always use organic if you can"},{"Instruction":" Chicken breast should be butterflied and slighlty tenderized on one side"},{"Instruction":" Sea salt lightly on both sides and coat with blanched almond flour"},{"Instruction":" Pad chicken firmly and carefully shake off excess flour"},{"Instruction":" Place into non-stick pan with hot coconut oil"},{"Instruction":" After about 30 seconds reduce heat to medium and cook for about 2 minutes on each side"},{"Instruction":"Its a good idea to pre-heat oven to 200 just to keep the first couple of chicken breasts warm"},{"Instruction":" Its best to use a cookie sheet lined with foil so to make sure not to place them on top of each other"},{"Instruction":" This is an amazing dish serve with the veggie of your choice or a delicous salad."}],"CurrentStep":0};
-
-        var stateRef = rootRef.child('State');
-        var recipeRef = rootRef.child('Recipe');
-        var stepRef = rootRef.child('/Recipe/CurrentStep');
-        var instructionsRef = rootRef.child('/Recipe/Instructions');
-
-        //recipeRef.set(myRecipe);
-        stateRef.set(2); //2 for recipe instructions mode
-
-        rootRef.on('value', function(rootSnapshot){
-          stepRef.on('value', function(stepSnapshot){
-            step = stepSnapshot.val();
-          });
-          instructionsRef.on('value', function(recipeSnapshot){
-            myJson = recipeSnapshot.val();
-            maxSteps = myJson.length;
-            console.log("Step " + (step + 1) + ", " + myJson[step].Instruction);
-          });
-        });
-
-        //Alexa what was step __ again?
-        setBtn.addEventListener('click', function(){
-            if(+(document.getElementById('stepNumber').value) <= maxSteps && +(document.getElementById('stepNumber').value) > 0){
-              stepRef.set(+(document.getElementById('stepNumber').value) - 1);
-            } else {
-              console.log("That step does not exist");
-            }
-        })
-
-        //Alexa, next step please
-        nextBtn.addEventListener('click', function(){
-            if((step + 1) < maxSteps){
-              stepRef.set((step + 1));
-            } else {
-              console.log("That's it, you're done!");
-            }
-        });
-
-        //Alexa, could you repeat the step again?
-        currBtn.addEventListener('click', function(){
-          console.log("Step " + (step + 1) + ", " + myJson[step].Instruction);
-        });
-
-        //Alexa, what was the last step?
-        prevBtn.addEventListener('click', function(){
-            if((step) > 0){
-              stepRef.set((step - 1));
-            } else {
-              console.log("That step does not exist, would you like to choose another recipe?")
-            }
-        });
-
-  </script>
 </body>
 </html>

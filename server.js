@@ -2,6 +2,7 @@ var http = require('http');
 var Firebase = require("firebase");
 var express = require("express");
 var session = new Firebase('https://fiery-heat-3854.firebaseio.com/');
+var path = require('path');
 
 var app = express();
 
@@ -38,16 +39,23 @@ app.get('/api/search/:searchkey', function(request, response) {
 });
 
 app.get('/api/favourites', function(request, response) {
-  var favourites = [];
   session.once("value", function(data) {
-    data.forEach(function(data) {
-      favourites.push(data);
-    })
+      response.json(data.val().Favourites);
   });
-}
+});
+
+app.post('/api/favourites', function(request, response) {
+  // Insert route for handling favourites
+  response.send('');
+});
+
+app.get('*', function(request, response) {
+  response.sendFile((path.join(__dirname + '/index.html')));
+});
 
 
 
 
 
 app.listen(port=8000);
+console.log("Listening on port " + 8000);

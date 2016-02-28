@@ -3,11 +3,8 @@ angular.module('myApp', []).controller('MainCtrl', function ($scope, $http, getD
         alert("Searching for = " + enteredValue);
 
         $scope.MyData = [];
-
         getDataService.getData(function(data) {
-
             $scope.MyData = data.SerialNumbers;
-
         });
     }2
 });

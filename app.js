@@ -488,17 +488,19 @@ function buildResponse(sessionAttributes, speechletResponse) {
     };
 }
 
-var mockInstructions = [ 'Step 1: Mix two parts garlic powder to one part each salt pepper onion powder and paprika',
-  'Step 2: For 2 large chicken breasts I use about 1 tsp garlic powder and 12 tsp each of everything else',
-  'Step 3: Evenly sprinkle the chicken breasts with the seasoning mixture.Heat a oven-safe panskillet on moderately high heat',
-  'Step 4: Add about 1-2 TB spoon of oil to the pan',
-  'Step 5: Once heated place the chicken in the pan',
-  'Step 6: Cook until golden brown on each side – about 3 minutes no more! on each side.Transfer the pan to the oven',
-  'Step 7: Bake in preheated oven on the top rack for about 20 minutes until the internal temperature of the chicken breast reaches 165 degrees and juices run clear.Remove from heat',
-  'Step 8: Allow the chicken breasts to sit for about 5 minutes to allow the juices to redistribute',
-  'Step 9: Serve as desired',
-  'Step 10: Store leftovers in an airtight container in the refrigerator.',
-  'Step 11: undefined' ]
+
+// mock instructions used while developing
+// var mockInstructions = [ 'Step 1: Mix two parts garlic powder to one part each salt pepper onion powder and paprika',
+//   'Step 2: For 2 large chicken breasts I use about 1 tsp garlic powder and 12 tsp each of everything else',
+//   'Step 3: Evenly sprinkle the chicken breasts with the seasoning mixture.Heat a oven-safe panskillet on moderately high heat',
+//   'Step 4: Add about 1-2 TB spoon of oil to the pan',
+//   'Step 5: Once heated place the chicken in the pan',
+//   'Step 6: Cook until golden brown on each side – about 3 minutes no more! on each side.Transfer the pan to the oven',
+//   'Step 7: Bake in preheated oven on the top rack for about 20 minutes until the internal temperature of the chicken breast reaches 165 degrees and juices run clear.Remove from heat',
+//   'Step 8: Allow the chicken breasts to sit for about 5 minutes to allow the juices to redistribute',
+//   'Step 9: Serve as desired',
+//   'Step 10: Store leftovers in an airtight container in the refrigerator.',
+//   'Step 11: undefined' ]
 
 
 

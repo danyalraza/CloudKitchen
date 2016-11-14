@@ -3,23 +3,22 @@
 var http = require('http');
 var Firebase = require("firebase");
 
-//demo project for reference
-// var nodemailer = require('nodemailer');
 
-// //emailer
+// var nodemailer = require('nodemailer');
+//emailer test
 // function sendEmail(emailText, emailHTML, callback){
 
 //   var transporter = nodemailer.createTransport({
 //     service: 'Gmail',
 //       auth: {
-//         user: 'spartahackechoramsay@gmail.com',
-//       pass: 'spartahack2016'
+//         user: 'user',
+//       pass: 'pass'
 //       }
 //   });
 
 //   var mailOptions = {
-//     from: 'spartahackechoramsay@gmail.com', 
-//     to: 'chen.bill96@gmail.com', 
+//     from: 'user1', 
+//     to: 'user2', 
 //     subject: 'Purchase Reminder', 
 //     text: emailText, 
 //     html: emailHTML 
